@@ -5,37 +5,51 @@ import webpage2html
 
 class Test(unittest.TestCase):
 
-    def local_test(self, index):
-        print ''
-        gen = webpage2html.generate(index, comment = False).encode('utf8').strip()
-        ans = open(index[:-5] + '_single.html', 'rb').read().strip()
-        gl = len(gen)
-        al = len(ans)
-        begin = 0
-        while begin < gl and begin < al and ans[begin] == gen[begin]:
-            begin += 1
-        end = -1
-        while end + gl > 0 and end + al > 0 and ans[end] == gen[end] :
-            end -= 1
-        self.assertEqual(gen, ans, 'Test Fail for %s, begin = %d, end = %d, ans len = %d, gen len = %d, ans = %s\ngen = %s\n' % (index, begin, end, al, gl, repr(ans[begin: end]), repr(gen[begin: end])))
-
-    def test_0ops(self):
-        self.local_test('./hacklu-ctf-2013-exp400-wannable-0ops.html')
-
-    def test_meepo_download(self):
-        self.local_test('./meepo-download.html')
-
-    def test_packet_storm(self):
-        self.local_test('./packet-storm-openssh-backdoor-patch.html')
-
     def test_none(self):
         print ''
-        self.assertEqual(webpage2html.generate('non-existing-file.html', comment = False), '')
+        self.assertEqual(webpage2html.generate('non-existing-file.html', comment=False, verbose=False), '')
+
+    def test_pre_formatting(self):
+        print ''
+        gen = webpage2html.generate('./test_pre_formatting.html', comment=False)
+        assert '<pre><code>$ git clone https://github.com/chaitin/sqlchop</code></pre>' in gen
+
+    def test_0ops(self):
+        print ''
+        gen = webpage2html.generate('./hacklu-ctf-2013-exp400-wannable-0ops.html', comment=False)
+        assert '<style data-href="./hacklu-ctf-2013-exp400-wannable-0ops_files/screen.css" type="text/css">html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt' in gen
+
+    def test_no_script(self):
+        print ''
+        gen = webpage2html.generate('./test_no_script.html', comment=False, keep_script=False)
+        assert '<script' not in gen, gen
+
+    def test_full_url(self):
+        print ''
+        gen = webpage2html.generate('./another_dir/test_full_url.html', comment=False, full_url=True)
+        assert 'href="another_dir/questions/110240"' in gen or 'href="./another_dir/questions/110240"' in gen, gen
+        assert 'href="another_dir/static/img/favicon.ico"' in gen or 'href="./another_dir/static/img/favicon.ico"' in gen, gen
+
+    def test_web_font(self):
+        print ''
+        gen = webpage2html.generate('./webfont.html', comment=False, full_url=True)
+        # FIXME: do not cover all web fonts with hash postfix
+        assert 'application/x-font-ttf' in gen, gen
+
+    def test_text_css(self):
+        print ''
+        gen = webpage2html.generate('./text_css.html', comment=False, full_url=True)
+        assert '<style data-href="./text_css/style.css" type="text/css">@import url(data:text/css;base64,Cmh' in gen
 
 if __name__ == '__main__':
     if os.path.dirname(sys.argv[0]):
         os.chdir(os.path.dirname(sys.argv[0]))
     suite = unittest.TestLoader().loadTestsFromTestCase(Test)
+    tests = []
+    if len(sys.argv) > 1:
+        tests.extend(sys.argv[1:])
+    if len(tests):
+        suite = unittest.TestSuite(map(Test, tests))
     rs = unittest.TextTestRunner(verbosity=2).run(suite)
     if len(rs.errors) > 0 or len(rs.failures) > 0:
         sys.exit(10)

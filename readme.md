@@ -9,36 +9,72 @@ This is a simple script to save a web page to a single html file. No mhtml or pd
 
 The basic idea is to insert all css/javascript files into html directly, and use base64 data URI for image data.
 
-## Usage
+## Usage and Example
 
 save webpage directly from url(**recommended** way):
 
-    $ python webpage2html.py http://www.google.com > google.html
+```bash
+$ python2 webpage2html.py http://www.google.com > google.html
+```
 
 or save webpage first using browsers such as chrome, to something.html with something_files directory beside.
 
-    $ python /path/to/something.html > something_single.html
+```bash
+$ python2 webpage2html.py /path/to/something.html > something_single.html
+```
 
 But note that, the second method may not always work as expected, because there may be urls like `//ssl.gstatic.com/gb/images/v1_c69d5271.png` (from google index page), but the file is missing in `Google_files` directory saved by browsers.
 
-## dependency
+Enable javascript, for example, save 2048 game page into a single html for offline playing
+
+```bash
+$ python2 webpage2html.py -s http://gabrielecirulli.github.io/2048/ > 2048.html
+```
+
+## Dependency
 
 BeautifulSoup4, lxml, termcolor(optional)
 
-    $ pip install lxml, BeautifulSoup4, termcolor
+```bash
+$ pip install -r requirements.txt
+```
+
+or install them manually
+
+```bash
+$ pip install lxml BeautifulSoup4 requests termcolor
+```
 
 I have tried the default `HTMLParser` and `html5lib` as the backend parser for BeautifulSoup, but both of them are buggy, `HTMLParser` handles self closing tags (like `<br>` `<meta>`) incorrectly(it will wait for closing tag for `<br>`, so If too many `<br>` tags exist in the html, BeautifulSoup will complain `RuntimeError: maximum recursion depth exceeded`), and `html5lib` will encode encoded html entities such as `&lt;` again to `&amp;lt;`, which is definitly unacceptable. I have tested many cases, and `lxml` works perfectly, so I choose to use `lxml` now.
 
 The `termcolor` package is for colored log output support if you like.
 
-## Todo
+## Cases still does not work
 
- 1. cookie support
- 1. handle encoding other than utf8
- 1. handle css whitespace pre-wrap or pre
- 1. http://www.python.org still does not work.
+### browser side less compiling
+
+The page embeds less css directly and use less.js to compile in browser. In this case, I still cannot find a way to embed the less code into generated html to make it work.
+
+```
+<link rel="stylesheet/less" type="text/css" href="http://dghubble.com/blog/theme/css/style.less">
+<script src="http://dghubble.com/blog/theme/js/less-1.5.0.min.js" type="text/javascript"></script>
+```
+
+ - http://lesscss.org/#client-side-usage
+ - http://dghubble.com/blog/posts/.bashprofile-.profile-and-.bashrc-conventions/
 
 # Thanks
 
  1. Thanks lukin.a.i who submitted patch to fix not recognised css link (rel=stylesheet) issue
+
+# License
+
+[webpage2html] use [SATA License](LICENSE.txt) (Star And Thank Author License), so you have to star this project before using. Read the [license](LICENSE.txt) carefully.
+
+# Reference
+
+ 1. Java port of this project. https://github.com/cedricblondeau/webpage2html-java
+
+[webpage2html]:https://github.com/zTrix/webpage2html
+
 
